@@ -60,11 +60,12 @@ def read_json_file(file_path):
 
 
 def get_lora_name(lora_path):
-    if opts.lora_preferred_name == "Filename":
-        lora_name = lora_path.stem
-    else:
-        metadata = sd_models.read_metadata_from_safetensors(lora_path)
-        lora_name = metadata.get('ss_output_name', lora_path.stem)
+    #if opts.lora_preferred_name == "Filename":
+    lora_name = lora_path.stem
+    # there were issues where if you wanted to compare loras with the same name (but dif filename) it wouldn't work
+    #else:
+    #    metadata = sd_models.read_metadata_from_safetensors(lora_path)
+    #    lora_name = metadata.get('ss_output_name', lora_path.stem)
     return lora_name
 
 def get_lora_prompt(lora_path, json_path, custom_weight=None, override_all=False):
