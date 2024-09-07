@@ -67,7 +67,7 @@ def get_lora_name(lora_path):
         lora_name = metadata.get('ss_output_name', lora_path.stem)
     return lora_name
 
-def get_lora_prompt(lora_path, json_path):
+def get_lora_prompt(lora_path, json_path, custom_weight=None, override_all=False):
     # Open and read the JSON file
     with open(json_path, 'r', encoding='utf-8') as file:
         data = json.load(file)
@@ -76,9 +76,12 @@ def get_lora_prompt(lora_path, json_path):
     preferred_weight = data.get("preferred weight", 1)
     activation_text = data.get("activation text", "")
 
+    # Apply custom weight logic
     try:
-        if float(preferred_weight) == 0:
-            preferred_weight = 1
+        if override_all:
+            preferred_weight = custom_weight
+        elif float(preferred_weight) == 0:
+            preferred_weight = custom_weight if custom_weight is not None else 1
     except:
         preferred_weight = 1
 
@@ -88,6 +91,7 @@ def get_lora_prompt(lora_path, json_path):
     output = f"<lora:{lora_name}:{preferred_weight}>, {activation_text},"
 
     return output
+
 
 def image_grid_with_text(imgs, texts, rows=None, cols=None, font_path=None, font_size=20, text_color="#FFFFFF", stroke_color="#000000", stroke_width=2, add_text=True):
     if rows is None:
@@ -218,6 +222,12 @@ class Script(scripts.Script):
                 select_all_lora_button = gr.Button("All", visible=len(startup_loras)>0)
                 deselect_all_lora_button = gr.Button("Clear", visible=len(startup_loras)>0)
 
+            # weight selection button
+            with gr.Row():
+                custom_weight = gr.Number(label="Custom LoRA Weight", value=1.0, elem_id=self.elem_id("custom_weight"))
+                override_all_weights = gr.Checkbox(label="Override all LoRA Weights", value=False, elem_id=self.elem_id("override_all_weights"))
+
+        
             with gr.Row():
                 checkbox_iterate = gr.Checkbox(label="Use consecutive seed", value=False, elem_id=self.elem_id("checkbox_iterate"))
                 checkbox_iterate_batch = gr.Checkbox(label="Use same random seed", value=False, elem_id=self.elem_id("checkbox_iterate_batch"))
@@ -251,7 +261,7 @@ class Script(scripts.Script):
             checkbox_auto_row_number.change(fn=toggle_auto_row_number, inputs=[checkbox_auto_row_number], outputs=grid_row_number)
             lora_tags_position_radio.change(fn=select_lora_tags_position, inputs=[lora_tags_position_radio], outputs=[])  
 
-        return [base_dir_checkbox, base_dir_textbox, directory_checkboxes, lora_checkboxes, checkbox_iterate, checkbox_iterate_batch, checkbox_save_grid, checkbox_auto_row_number, grid_row_number, font_path, font_size, font_color, stroke_color, stroke_width, checkbox_add_text, lora_tags_position_radio]
+        return [base_dir_checkbox, base_dir_textbox, directory_checkboxes, lora_checkboxes, checkbox_iterate, checkbox_iterate_batch, checkbox_save_grid, checkbox_auto_row_number, grid_row_number, font_path, font_size, font_color, stroke_color, stroke_width, checkbox_add_text, lora_tags_position_radio, custom_weight, override_all_weights]
 
     def run(self, p, is_use_custom_path, custom_path, directories, selected_loras, checkbox_iterate, checkbox_iterate_batch, is_save_grid, is_auto_row_number, row_number, font_path, font_size, font_color, stroke_color, stroke_width, checkbox_add_text, lora_tags_position):
         if len(selected_loras) == 0:
@@ -270,23 +280,23 @@ class Script(scripts.Script):
                 continue
             safetensor_files = [f for f in os.listdir(directory) if f.endswith('.safetensors')]
 
-            for safetensor_file in safetensor_files:
-                lora_filename = os.path.splitext(safetensor_file)[0]
-                if lora_filename not in selected_loras:
-                    continue
-                lora_file_path = directory.joinpath(safetensor_file)
-                json_file = lora_filename + '.json'
-                json_file_path = directory.joinpath(json_file)
-
-                additional_prompt = None
-                if os.path.exists(json_file_path):
-                    try:
-                        additional_prompt = get_lora_prompt(lora_file_path, json_file_path)
-                    except Exception as e:
-                        print(f"Lora Queue Helper got error when loading lora info, error: {e}")
-                
-                if additional_prompt == None or not isinstance(additional_prompt, str):
-                    additional_prompt = f"<lora:{lora_filename}:1>,"
+        for safetensor_file in safetensor_files:
+            lora_filename = os.path.splitext(safetensor_file)[0]
+            if lora_filename not in selected_loras:
+                continue
+            lora_file_path = directory.joinpath(safetensor_file)
+            json_file = lora_filename + '.json'
+            json_file_path = directory.joinpath(json_file)
+    
+            additional_prompt = None
+            if os.path.exists(json_file_path):
+                try:
+                    additional_prompt = get_lora_prompt(lora_file_path, json_file_path, custom_weight, override_all_weights)
+                except Exception as e:
+                    print(f"Lora Queue Helper got error when loading lora info, error: {e}")
+            
+            if additional_prompt == None or not isinstance(additional_prompt, str):
+                additional_prompt = f"<lora:{lora_filename}:1>,"
 
                 args = {}
                 if lora_tags_position == "Prepend":
