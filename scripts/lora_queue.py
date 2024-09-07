@@ -224,7 +224,7 @@ class Script(scripts.Script):
 
             # weight selection button
             with gr.Row():
-                custom_weight = gr.Number(label="Custom LoRA Weight", value=1.0, elem_id=self.elem_id("custom_weight"))
+                custom_weight = gr.Number(label="Custom LoRA Weight", minumum=-1, maximum=1, step=0.1, value=0.7, elem_id=self.elem_id("custom_weight"))
                 override_all_weights = gr.Checkbox(label="Override all LoRA Weights", value=False, elem_id=self.elem_id("override_all_weights"))
 
         
