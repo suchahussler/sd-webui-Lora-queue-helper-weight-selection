@@ -263,7 +263,8 @@ class Script(scripts.Script):
 
         return [base_dir_checkbox, base_dir_textbox, directory_checkboxes, lora_checkboxes, checkbox_iterate, checkbox_iterate_batch, checkbox_save_grid, checkbox_auto_row_number, grid_row_number, font_path, font_size, font_color, stroke_color, stroke_width, checkbox_add_text, lora_tags_position_radio, custom_weight, override_all_weights]
 
-    def run(self, p, is_use_custom_path, custom_path, directories, selected_loras, checkbox_iterate, checkbox_iterate_batch, is_save_grid, is_auto_row_number, row_number, font_path, font_size, font_color, stroke_color, stroke_width, checkbox_add_text, lora_tags_position):
+    def run(self, p, is_use_custom_path, custom_path, directories, selected_loras, checkbox_iterate, checkbox_iterate_batch, is_save_grid, is_auto_row_number, row_number, font_path, font_size, font_color, stroke_color, stroke_width, checkbox_add_text, lora_tags_position, custom_weight, override_all_weights):
+
         if len(selected_loras) == 0:
             return process_images(p)
 
