@@ -280,23 +280,23 @@ class Script(scripts.Script):
                 continue
             safetensor_files = [f for f in os.listdir(directory) if f.endswith('.safetensors')]
 
-        for safetensor_file in safetensor_files:
-            lora_filename = os.path.splitext(safetensor_file)[0]
-            if lora_filename not in selected_loras:
-                continue
-            lora_file_path = directory.joinpath(safetensor_file)
-            json_file = lora_filename + '.json'
-            json_file_path = directory.joinpath(json_file)
-    
-            additional_prompt = None
-            if os.path.exists(json_file_path):
-                try:
-                    additional_prompt = get_lora_prompt(lora_file_path, json_file_path, custom_weight, override_all_weights)
-                except Exception as e:
-                    print(f"Lora Queue Helper got error when loading lora info, error: {e}")
-            
-            if additional_prompt == None or not isinstance(additional_prompt, str):
-                additional_prompt = f"<lora:{lora_filename}:1>,"
+            for safetensor_file in safetensor_files:
+                lora_filename = os.path.splitext(safetensor_file)[0]
+                if lora_filename not in selected_loras:
+                    continue
+                lora_file_path = directory.joinpath(safetensor_file)
+                json_file = lora_filename + '.json'
+                json_file_path = directory.joinpath(json_file)
+        
+                additional_prompt = None
+                if os.path.exists(json_file_path):
+                    try:
+                        additional_prompt = get_lora_prompt(lora_file_path, json_file_path, custom_weight, override_all_weights)
+                    except Exception as e:
+                        print(f"Lora Queue Helper got error when loading lora info, error: {e}")
+                
+                if additional_prompt == None or not isinstance(additional_prompt, str):
+                    additional_prompt = f"<lora:{lora_filename}:1>,"
 
                 args = {}
                 if lora_tags_position == "Prepend":
